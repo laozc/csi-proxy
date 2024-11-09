@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"net/http"
+	_ "net/http/pprof"
 
 	diskapi "github.com/kubernetes-csi/csi-proxy/pkg/os/disk"
 	filesystemapi "github.com/kubernetes-csi/csi-proxy/pkg/os/filesystem"
@@ -17,6 +19,8 @@ import (
 	syssrv "github.com/kubernetes-csi/csi-proxy/pkg/server/system"
 	srvtypes "github.com/kubernetes-csi/csi-proxy/pkg/server/types"
 	volumesrv "github.com/kubernetes-csi/csi-proxy/pkg/server/volume"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
 	"k8s.io/klog/v2"
@@ -68,7 +72,22 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	s := server.NewServer(apiGroups...)
+
+	reg := prometheus.NewRegistry()
+	go func() error {
+		m := http.NewServeMux()
+		// Create HTTP handler for Prometheus metrics.
+		m.Handle("/metrics", promhttp.HandlerFor(
+			reg,
+			promhttp.HandlerOpts{
+				// Opt into OpenMetrics e.g. to support exemplars.
+				EnableOpenMetrics: true,
+			},
+		))
+
+		return http.ListenAndServe(":10001", m)
+	}()
+	s := server.NewServer(reg, apiGroups...)
 
 	if err := s.Start(nil); err != nil {
 		panic(err)
