@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"net/http"
 
 	diskapi "github.com/kubernetes-csi/csi-proxy/pkg/os/disk"
 	filesystemapi "github.com/kubernetes-csi/csi-proxy/pkg/os/filesystem"
@@ -19,6 +20,7 @@ import (
 	volumesrv "github.com/kubernetes-csi/csi-proxy/pkg/server/volume"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc"
+	"k8s.io/component-base/metrics/legacyregistry"
 	"k8s.io/klog/v2"
 )
 
@@ -34,11 +36,12 @@ func (i *workingDirFlags) Set(value string) error {
 }
 
 var (
-	kubeletPath    = flag.String("kubelet-path", `C:\var\lib\kubelet`, "Prefix path of the kubelet directory in the host file system")
-	windowsSvc     = flag.Bool("windows-service", false, "Configure as a Windows Service")
-	requirePrivacy = flag.Bool("require-privacy", true, "If true, New-SmbGlobalMapping will be called with -RequirePrivacy $true")
-	service        *handler
-	workingDirs    workingDirFlags
+	kubeletPath     = flag.String("kubelet-path", `C:\var\lib\kubelet`, "Prefix path of the kubelet directory in the host file system")
+	windowsSvc      = flag.Bool("windows-service", false, "Configure as a Windows Service")
+	requirePrivacy  = flag.Bool("require-privacy", true, "If true, New-SmbGlobalMapping will be called with -RequirePrivacy $true")
+	metricsBindAddr = flag.String("metrics-bind-addr", "localhost:10010", "The address the metric endpoint binds to.")
+	service         *handler
+	workingDirs     workingDirFlags
 )
 
 type handler struct {
@@ -68,6 +71,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	go func() error {
+		m := http.NewServeMux()
+		// Create HTTP handler for Prometheus metrics.
+		m.Handle("/metrics", legacyregistry.Handler())
+
+		return http.ListenAndServe(*metricsBindAddr, m)
+	}()
 	s := server.NewServer(apiGroups...)
 
 	if err := s.Start(nil); err != nil {

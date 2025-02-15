@@ -6,19 +6,23 @@ import (
 	"sync"
 
 	"github.com/Microsoft/go-winio"
+	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/kubernetes-csi/csi-proxy/client"
 	srvtypes "github.com/kubernetes-csi/csi-proxy/pkg/server/types"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
+	"k8s.io/component-base/metrics/legacyregistry"
 )
 
 // Server aggregates a number of API groups and versions,
 // and serves requests for all of them.
 type Server struct {
-	versionedAPIs []*srvtypes.VersionedAPI
-	started       bool
-	mutex         *sync.Mutex
-	grpcServers   []*grpc.Server
+	versionedAPIs     []*srvtypes.VersionedAPI
+	started           bool
+	mutex             *sync.Mutex
+	grpcServers       []*grpc.Server
+	prometheusMetrics *grpcprom.ServerMetrics
 }
 
 // NewServer creates a new Server for the given API groups.
@@ -28,9 +32,17 @@ func NewServer(apiGroups ...srvtypes.APIGroup) *Server {
 		versionedAPIs = append(versionedAPIs, apiGroup.VersionedAPIs()...)
 	}
 
+	srvMetrics := grpcprom.NewServerMetrics(
+		grpcprom.WithServerHandlingTimeHistogram(
+			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
+		),
+	)
+	legacyregistry.RawMustRegister(srvMetrics)
+
 	return &Server{
-		versionedAPIs: versionedAPIs,
-		mutex:         &sync.Mutex{},
+		versionedAPIs:     versionedAPIs,
+		mutex:             &sync.Mutex{},
+		prometheusMetrics: srvMetrics,
 	}
 }
 
@@ -107,8 +119,25 @@ func (s *Server) createAndStartGRPCServers(listeners []net.Listener) chan *versi
 	doneChan := make(chan *versionedAPIDone, len(s.versionedAPIs))
 	s.grpcServers = make([]*grpc.Server, len(s.versionedAPIs))
 
+	//s.createOtelExporter(context.Background())
+
 	for i, versionedAPI := range s.versionedAPIs {
-		grpcServer := grpc.NewServer()
+		opts := []grpc.ServerOption{
+			grpc.StatsHandler(otelgrpc.NewServerHandler()),
+			grpc.ChainUnaryInterceptor(
+				s.prometheusMetrics.UnaryServerInterceptor(), //grpcprom.WithExemplarFromContext(exemplarFromContext)),
+				//	logging.UnaryServerInterceptor(interceptorLogger(rpcLogger), logging.WithFieldsFromContext(logTraceID)),
+				//	selector.UnaryServerInterceptor(auth.UnaryServerInterceptor(authFn), selector.MatchFunc(allButHealthZ)),
+				//	recovery.UnaryServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
+			),
+			grpc.ChainStreamInterceptor(
+				s.prometheusMetrics.StreamServerInterceptor(), //grpcprom.WithExemplarFromContext(exemplarFromContext)),
+				//	logging.StreamServerInterceptor(interceptorLogger(rpcLogger), logging.WithFieldsFromContext(logTraceID)),
+				//	selector.StreamServerInterceptor(auth.StreamServerInterceptor(authFn), selector.MatchFunc(allButHealthZ)),
+				//	recovery.StreamServerInterceptor(recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
+			),
+		}
+		grpcServer := grpc.NewServer(opts...)
 		s.grpcServers[i] = grpcServer
 
 		versionedAPI.Registrant(grpcServer)
