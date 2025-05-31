@@ -60,7 +60,7 @@ func (APIImplementor) DiscoverTargetPortal(portal *TargetPortal) ([]string, erro
 		return nil, err
 	}
 
-	targets, err := cim.ListISCSITargetsByTargetPortalWithFilters(nil, []*storage.MSFT_iSCSITargetPortal{instance})
+	targets, err := cim.ListISCSITargetsByTargetPortal([]*storage.MSFT_iSCSITargetPortal{instance})
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (APIImplementor) RemoveTargetPortal(portal *TargetPortal) error {
 
 func (APIImplementor) ConnectTarget(portal *TargetPortal, iqn string,
 	authType string, chapUser string, chapSecret string) error {
-	target, err := cim.QueryISCSITarget(portal.Address, portal.Port, iqn, nil)
+	target, err := cim.QueryISCSITarget(portal.Address, portal.Port, iqn)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func (APIImplementor) ConnectTarget(portal *TargetPortal, iqn string,
 }
 
 func (APIImplementor) DisconnectTarget(portal *TargetPortal, iqn string) error {
-	target, err := cim.QueryISCSITarget(portal.Address, portal.Port, iqn, nil)
+	target, err := cim.QueryISCSITarget(portal.Address, portal.Port, iqn)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (APIImplementor) DisconnectTarget(portal *TargetPortal, iqn string) error {
 	}
 
 	// get session
-	session, err := cim.QueryISCSISessionByTarget(target, nil)
+	session, err := cim.QueryISCSISessionByTarget(target)
 	if err != nil {
 		return fmt.Errorf("error query session of  target %s from target portal at (%s:%d). err: %w", iqn, portal.Address, portal.Port, err)
 	}
@@ -199,9 +199,7 @@ func (APIImplementor) DisconnectTarget(portal *TargetPortal, iqn string) error {
 }
 
 func (APIImplementor) GetTargetDisks(portal *TargetPortal, iqn string) ([]string, error) {
-	// Converting DiskNumber to string for compatibility with disk api group
-	// Not using pipeline in order to validate that items are non-empty
-	target, err := cim.QueryISCSITarget(portal.Address, portal.Port, iqn, nil)
+	target, err := cim.QueryISCSITarget(portal.Address, portal.Port, iqn)
 	if err != nil {
 		return nil, err
 	}
