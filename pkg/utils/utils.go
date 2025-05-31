@@ -3,11 +3,9 @@ package utils
 import (
 	"errors"
 	"os"
-	"os/exec"
 	"strings"
 
 	"golang.org/x/sys/windows"
-	"k8s.io/klog/v2"
 )
 
 const (
@@ -22,14 +20,6 @@ func EnsureLongPath(path string) string {
 		path = LongPathPrefix + path
 	}
 	return path
-}
-
-func RunPowershellCmd(command string, envs ...string) ([]byte, error) {
-	cmd := exec.Command("powershell", "-Mta", "-NoProfile", "-Command", command)
-	cmd.Env = append(os.Environ(), envs...)
-	klog.V(8).Infof("Executing command: %q", cmd.String())
-	out, err := cmd.CombinedOutput()
-	return out, err
 }
 
 // IsMountedFolder checks whether the `path` is a mounted folder.
