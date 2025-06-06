@@ -5,6 +5,7 @@ package cim
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/go-ole/go-ole"
@@ -49,6 +50,31 @@ func NewWMISession(namespace string) (*cim.WmiSession, error) {
 	return session, nil
 }
 
+func QueryInstancesFromSession(c *cim.WmiSession, queryExpression string) ([]*cim.WmiInstance, error) {
+	enum, err := c.PerformRawQuery(queryExpression)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Raw query %s failed", queryExpression)
+	}
+	defer enum.Release()
+
+	wmiInstances := []*cim.WmiInstance{}
+	for tmp, length, err := enum.Next(1); length > 0; tmp, length, err = enum.Next(1) {
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to get next for enumerator")
+		}
+
+		wmiInstance, err := cim.CreateWmiInstance(&tmp, c)
+		if err != nil {
+			return nil, errors.Wrapf(err, "Failed to create WMI instance %v", tmp)
+		}
+
+		wmiInstances = append(wmiInstances, wmiInstance)
+	}
+
+	log.Printf("[WMI] QueryInstances [%s]=> [%d]\n", queryExpression, len(wmiInstances))
+	return wmiInstances, nil
+}
+
 // QueryFromWMI executes a WMI query in the specified namespace and processes each result
 // through the provided handler function. Stops processing if handler returns false or encounters an error.
 func QueryFromWMI(namespace string, query *query.WmiQuery, handler InstanceHandler) error {
@@ -59,7 +85,7 @@ func QueryFromWMI(namespace string, query *query.WmiQuery, handler InstanceHandl
 
 	defer session.Close()
 
-	instances, err := session.QueryInstances(query.String())
+	instances, err := QueryInstancesFromSession(session, query.String())
 	if err != nil {
 		return fmt.Errorf("failed to query WMI class %s. error: %w", query.ClassName, err)
 	}
