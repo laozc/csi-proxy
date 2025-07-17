@@ -5,6 +5,7 @@ package cim
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/microsoft/wmi/pkg/base/query"
@@ -59,5 +60,6 @@ func QueryDiskByNumber(diskNumber uint32, selectorList []string) (*storage.MSFT_
 func RefreshDisk(disk *storage.MSFT_Disk) (int, string, error) {
 	var status string
 	result, err := disk.InvokeMethodWithReturn("Refresh", &status)
+	log.Printf("RefreshDisk Status is %s", status)
 	return int(result), status, err
 }

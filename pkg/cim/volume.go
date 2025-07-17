@@ -5,6 +5,7 @@ package cim
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/go-ole/go-ole"
@@ -369,6 +370,7 @@ func GetPartitionSupportedSize(part *storage.MSFT_Partition) (result int, sizeMi
 func ResizePartition(part *storage.MSFT_Partition, size int64) (int, string, error) {
 	var status string
 	result, err := part.InvokeMethodWithReturn("Resize", strconv.Itoa(int(size)), &status)
+	log.Printf("ResizePartition Status is %s", status)
 	return int(result), status, err
 }
 
