@@ -211,6 +211,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			log.Printf("Deference arg -1 %v", valPtr)
 			var val = unsafe.Pointer(valPtr)
 			log.Printf("Deference arg -2 %v", val)
+			log.Printf("Deference arg -3 %v", *(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
 			*(params[n].(*string)) = LpOleStrToString(*(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
 		}
 	}
