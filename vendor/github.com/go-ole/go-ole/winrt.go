@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package ole
@@ -7,10 +8,13 @@ import (
 	"syscall"
 	"unicode/utf8"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 var (
 	procRoInitialize              = modcombase.NewProc("RoInitialize")
+	procRoUninitialize            = modcombase.NewProc("RoUninitialize")
 	procRoActivateInstance        = modcombase.NewProc("RoActivateInstance")
 	procRoGetActivationFactory    = modcombase.NewProc("RoGetActivationFactory")
 	procWindowsCreateString       = modcombase.NewProc("WindowsCreateString")
@@ -20,6 +24,14 @@ var (
 
 func RoInitialize(thread_type uint32) (err error) {
 	hr, _, _ := procRoInitialize.Call(uintptr(thread_type))
+	if hr != 0 {
+		err = NewError(hr)
+	}
+	return
+}
+
+func RoUninitialize() (err error) {
+	hr, _, _ := procRoUninitialize.Call()
 	if hr != 0 {
 		err = NewError(hr)
 	}
@@ -64,7 +76,7 @@ type HString uintptr
 
 // NewHString returns a new HString for Go string.
 func NewHString(s string) (hstring HString, err error) {
-	u16 := syscall.StringToUTF16Ptr(s)
+	u16 := windows.StringToUTF16Ptr(s)
 	len := uint32(utf8.RuneCountInString(s))
 	hr, _, _ := procWindowsCreateString.Call(
 		uintptr(unsafe.Pointer(u16)),

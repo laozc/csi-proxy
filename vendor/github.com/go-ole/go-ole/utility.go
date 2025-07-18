@@ -1,6 +1,7 @@
 package ole
 
 import (
+	"log"
 	"unicode/utf16"
 	"unsafe"
 )
@@ -63,6 +64,7 @@ func BstrToString(p *uint16) string {
 		return ""
 	}
 	length := SysStringLen((*int16)(unsafe.Pointer(p)))
+	log.Printf("len is %d", length)
 	a := make([]uint16, length)
 
 	ptr := unsafe.Pointer(p)

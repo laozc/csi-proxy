@@ -4,16 +4,19 @@
 package ole
 
 import (
+	"log"
 	"math/big"
 	"syscall"
 	"time"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 func getIDsOfName(disp *IDispatch, names []string) (dispid []int32, err error) {
 	wnames := make([]*uint16, len(names))
 	for i := 0; i < len(names); i++ {
-		wnames[i] = syscall.StringToUTF16Ptr(names[i])
+		wnames[i] = windows.StringToUTF16Ptr(names[i])
 	}
 	dispid = make([]int32, len(names))
 	namelen := uint32(len(names))
@@ -87,9 +90,9 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			case *bool:
 				vargs[n] = NewVariant(VT_BOOL|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*bool)))))
 			case uint8:
-				vargs[n] = NewVariant(VT_I1, int64(v.(uint8)))
+				vargs[n] = NewVariant(VT_UI1, int64(v.(uint8)))
 			case *uint8:
-				vargs[n] = NewVariant(VT_I1|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint8)))))
+				vargs[n] = NewVariant(VT_UI1|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(*uint8)))))
 			case int8:
 				vargs[n] = NewVariant(VT_I1, int64(v.(int8)))
 			case *int8:
@@ -150,6 +153,13 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 				vargs[n] = NewVariant(VT_DISPATCH, int64(uintptr(unsafe.Pointer(v.(*IDispatch)))))
 			case **IDispatch:
 				vargs[n] = NewVariant(VT_DISPATCH|VT_BYREF, int64(uintptr(unsafe.Pointer(v.(**IDispatch)))))
+			case Nothing:
+				switch v {
+				case EMPTY:
+					vargs[n] = NewVariant(VT_EMPTY, 0)
+				case NULL:
+					vargs[n] = NewVariant(VT_NULL, 0)
+				}
 			case nil:
 				vargs[n] = NewVariant(VT_NULL, 0)
 			case *VARIANT:
@@ -196,6 +206,11 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 			SysFreeString(((*int16)(unsafe.Pointer(uintptr(varg.Val)))))
 		}
 		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
+			log.Printf("Received varg %d val of %d, hr is %d", n, varg.Val, hr)
+			var valPtr uintptr = uintptr(varg.Val)
+			log.Printf("Deference arg -1 %v", valPtr)
+			var val = unsafe.Pointer(valPtr)
+			log.Printf("Deference arg -2 %v", val)
 			*(params[n].(*string)) = LpOleStrToString(*(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
 		}
 	}

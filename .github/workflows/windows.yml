@@ -22,7 +22,7 @@ jobs:
           Install-WindowsFeature -name Hyper-V-PowerShell
 
           $env:CSI_PROXY_GH_ACTIONS="TRUE"
-          go test --timeout 20m -v -run ^\QTestVolume\E$/^\QMountVolume\E$ ./integrationtests/...
+          go test --timeout 20m -v -race -run ^\QTestVolume\E$/^\QMountVolume\E$ ./integrationtests/...
   unit_tests:
     strategy:
       matrix:
