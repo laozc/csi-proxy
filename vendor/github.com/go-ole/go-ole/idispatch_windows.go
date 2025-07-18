@@ -207,11 +207,10 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		}
 		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
 			log.Printf("Received varg %d val of %d, hr is %d", n, varg.Val, hr)
-			var valPtr uintptr = uintptr(varg.Val)
-			log.Printf("Deference arg -1 %v", valPtr)
-			var val = unsafe.Pointer(valPtr)
-			log.Printf("Deference arg -2 %v", val)
-			log.Printf("Deference arg -3 %v", *(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
+			log.Printf("Deference arg -1 %v", uintptr(varg.Val))
+			log.Printf("Deference arg -2 %v", unsafe.Pointer(uintptr(varg.Val)))
+			log.Printf("Deference arg -3 %v", (**uint16)(unsafe.Pointer(uintptr(varg.Val))))
+			log.Printf("Deference arg -4 %v", *(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
 			*(params[n].(*string)) = LpOleStrToString(*(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
 		}
 	}
