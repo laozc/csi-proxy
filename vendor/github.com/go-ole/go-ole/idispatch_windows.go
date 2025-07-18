@@ -5,15 +5,14 @@ package ole
 
 /*
 #include <stdint.h>
-#include <wchar.h>
 
-// Inline C version of helper
-const wchar_t* deref_bstr_ptr(void* p) {
-    if (!p) return NULL;
-    return *(const wchar_t**)p;
+// Returns an int* from a raw int64 address of an int*
+const int* deref_int_ptr_from_int64(int64_t addr) {
+    if (!addr) return NULL;
+    void** pp = (void**)(uintptr_t)addr;
+    return *(const int**)pp;
 }
 */
-
 import "C"
 
 import (
@@ -221,7 +220,7 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
 			log.Printf("Received varg %d val of %d, hr is %d", n, varg.Val, hr)
 			log.Printf("Deference arg -1 %v", uintptr(varg.Val))
-			val := C.deref_bstr_ptr(uintptr(varg.Val))
+			val := C.deref_int_ptr_from_int64(C.int64_t(varg.Val))
 			log.Printf("Deference arg -2 %v", unsafe.Pointer(val))
 			log.Printf("Deference arg -3 %v", (*uint16)(unsafe.Pointer(val)))
 			//log.Printf("Deference arg -4 %v", *(**uint16)(unsafe.Pointer(uintptr(varg.Val))))

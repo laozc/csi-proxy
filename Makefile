@@ -8,7 +8,7 @@ GOPATH ?= $(shell go env GOPATH)
 REPO_ROOT = $(CURDIR)
 BUILD_DIR = bin
 BUILD_TOOLS_DIR = $(BUILD_DIR)/tools
-GO_ENV_VARS = GO111MODULE=on GOOS=windows GOARCH=amd64
+GO_ENV_VARS = GO111MODULE=on GOOS=windows GOARCH=amd64 CGO_ENABLED=1
 
 # see https://github.com/golangci/golangci-lint/releases
 GOLANGCI_LINT_VERSION = v1.21.0
