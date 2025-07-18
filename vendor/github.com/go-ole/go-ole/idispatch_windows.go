@@ -3,6 +3,19 @@
 
 package ole
 
+/*
+#include <stdint.h>
+#include <wchar.h>
+
+// Inline C version of helper
+const wchar_t* deref_bstr_ptr(void* p) {
+    if (!p) return NULL;
+    return *(const wchar_t**)p;
+}
+*/
+
+import "C"
+
 import (
 	"log"
 	"math/big"
@@ -208,10 +221,11 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
 			log.Printf("Received varg %d val of %d, hr is %d", n, varg.Val, hr)
 			log.Printf("Deference arg -1 %v", uintptr(varg.Val))
-			log.Printf("Deference arg -2 %v", unsafe.Pointer(uintptr(varg.Val)))
-			log.Printf("Deference arg -3 %v", (**uint16)(unsafe.Pointer(uintptr(varg.Val))))
-			log.Printf("Deference arg -4 %v", *(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
-			*(params[n].(*string)) = LpOleStrToString(*(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
+			val := C.deref_bstr_ptr(uintptr(varg.Val))
+			log.Printf("Deference arg -2 %v", unsafe.Pointer(val))
+			log.Printf("Deference arg -3 %v", (*uint16)(unsafe.Pointer(val)))
+			//log.Printf("Deference arg -4 %v", *(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
+			*(params[n].(*string)) = LpOleStrToString((*uint16)(unsafe.Pointer(val)))
 		}
 	}
 	return

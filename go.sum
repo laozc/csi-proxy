@@ -3,8 +3,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/go-logr/logr v0.4.0 h1:K7/B1jt6fIBQVd4Owv2MqGQClcgf0R266+7C/QjRcLc=
 github.com/go-logr/logr v0.4.0/go.mod h1:z6/tIYblkpsD+a4lm/fGIIU9mZ+XfAiaFtq7xTgseGU=
-github.com/laozc/go-ole v0.0.0-20250718142647-f8e227f4448e h1:+KgR7SASeadOmg2wxAKm9f1jUwi8IGs4S/jz9x+o5FU=
-github.com/laozc/go-ole v0.0.0-20250718142647-f8e227f4448e/go.mod h1:2ip94f67up8I6Po4OnI0rjMeULNtsGHkQOLwhRZl5qk=
+github.com/laozc/go-ole v0.0.0-20250718162713-298cd6ff4b8e h1:fkqf4nqSPPHrS7WziAY/eAuNa/V7Qq5g31p21WeBPGw=
+github.com/laozc/go-ole v0.0.0-20250718162713-298cd6ff4b8e/go.mod h1:2ip94f67up8I6Po4OnI0rjMeULNtsGHkQOLwhRZl5qk=
 github.com/microsoft/wmi v0.25.1 h1:sQv9hCEHtW5K6yEVL78T6XGRMGxk4aTpcJwCiB5rLN0=
 github.com/microsoft/wmi v0.25.1/go.mod h1:1zbdSF0A+5OwTUII5p3hN7/K6KF2m3o27pSG6Y51VU8=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=

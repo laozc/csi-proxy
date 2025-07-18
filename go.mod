@@ -18,4 +18,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/go-ole/go-ole v1.3.0 => github.com/laozc/go-ole v0.0.0-20250718142647-f8e227f4448e
+replace github.com/go-ole/go-ole v1.3.0 => github.com/laozc/go-ole v0.0.0-20250718162713-298cd6ff4b8e
