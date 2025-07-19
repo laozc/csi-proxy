@@ -4,7 +4,7 @@ github.com/davecgh/go-spew/spew
 # github.com/go-logr/logr v0.4.0
 ## explicit; go 1.14
 github.com/go-logr/logr
-# github.com/go-ole/go-ole v1.3.0 => github.com/laozc/go-ole v0.0.0-20250718165350-701dae3345fe
+# github.com/go-ole/go-ole v1.3.0 => github.com/laozc/go-ole v0.0.0-20250719041207-d8481992f267
 ## explicit; go 1.12
 github.com/go-ole/go-ole
 github.com/go-ole/go-ole/oleutil

@@ -6,11 +6,10 @@ package ole
 /*
 #include <stdint.h>
 
-// Returns an int* from a raw int64 address of an int*
-const int* deref_int_ptr_from_int64(int64_t addr) {
+const void* deref_byref_pointer(int64_t addr) {
     if (!addr) return NULL;
     void** pp = (void**)(uintptr_t)addr;
-    return *(const int**)pp;
+    return *(const void**)pp;
 }
 */
 import "C"
@@ -220,9 +219,13 @@ func invoke(disp *IDispatch, dispid int32, dispatch int16, params ...interface{}
 		if varg.VT == (VT_BSTR|VT_BYREF) && varg.Val != 0 {
 			log.Printf("Received varg %d val of %d, hr is %d", n, varg.Val, hr)
 			log.Printf("Deference arg -1 %v", uintptr(varg.Val))
-			val := C.deref_int_ptr_from_int64(C.int64_t(varg.Val))
-			log.Printf("Deference arg -2 %v", unsafe.Pointer(val))
-			log.Printf("Deference arg -3 %v", (*uint16)(unsafe.Pointer(val)))
+			log.Printf("Deference arg -2 %v", unsafe.Pointer(uintptr(varg.Val)))
+			log.Printf("Deference arg -3 %d", (**uint16)(unsafe.Pointer(uintptr(varg.Val))))
+			log.Printf("Deference arg -4 %d", *(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
+
+			val := C.deref_byref_pointer(C.int64_t(varg.Val))
+			log.Printf("Deference arg -5 %v", unsafe.Pointer(val))
+			log.Printf("Deference arg -6 %v", (*uint16)(unsafe.Pointer(val)))
 			//log.Printf("Deference arg -4 %v", *(**uint16)(unsafe.Pointer(uintptr(varg.Val))))
 			*(params[n].(*string)) = LpOleStrToString((*uint16)(unsafe.Pointer(val)))
 		}
