@@ -74,10 +74,11 @@ func TestIsPathValid(t *testing.T) {
 	invalid := string([]byte{0x00}) // illegal null character
 
 	tests := []struct {
-		name        string
-		path        string
-		expectValid bool
-		expectErr   bool
+		name             string
+		path             string
+		expectValid      bool
+		expectErr        bool
+		expectErrMessage string
 	}{
 		{
 			name:        "ValidFile",
@@ -125,6 +126,9 @@ func TestIsPathValid(t *testing.T) {
 			}
 			if (err != nil) != tt.expectErr {
 				t.Errorf("Expected error = %v, got error = %v", tt.expectErr, err)
+				if err.Error() != tt.expectErrMessage {
+					t.Errorf("Expected error message = %s, got error = %s", tt.expectErrMessage, err.Error())
+				}
 			}
 		})
 	}
@@ -198,12 +202,13 @@ func TestIsMountedFolder(t *testing.T) {
 	require.NoError(t, err, "Failed to create temporary directory.")
 
 	tests := []struct {
-		name           string
-		path           string
-		setup          func()
-		cleanup        func()
-		expectedResult bool
-		expectedError  error
+		name               string
+		path               string
+		setup              func()
+		cleanup            func()
+		expectedResult     bool
+		expectedError      error
+		expectedErrMessage string
 	}{
 		{
 			name:           "Non-existent path",
@@ -327,40 +332,41 @@ func TestIsPathSymlink(t *testing.T) {
 	nonExistent := filepath.Join(tmpDir, "not_exists")
 
 	tests := []struct {
-		name        string
-		path        string
-		expectLink  bool
-		expectError bool
+		name             string
+		path             string
+		expectLink       bool
+		expectErr        bool
+		expectErrMessage string
 	}{
 		{
-			name:        "RegularFile",
-			path:        filePath,
-			expectLink:  false,
-			expectError: false,
+			name:       "RegularFile",
+			path:       filePath,
+			expectLink: false,
+			expectErr:  false,
 		},
 		{
-			name:        "FileSymlink",
-			path:        symlinkPath,
-			expectLink:  true,
-			expectError: false,
+			name:       "FileSymlink",
+			path:       symlinkPath,
+			expectLink: true,
+			expectErr:  false,
 		},
 		{
-			name:        "Directory",
-			path:        dirPath,
-			expectLink:  false,
-			expectError: false,
+			name:       "Directory",
+			path:       dirPath,
+			expectLink: false,
+			expectErr:  false,
 		},
 		{
-			name:        "DirectorySymlink",
-			path:        dirSymlinkPath,
-			expectLink:  true,
-			expectError: false,
+			name:       "DirectorySymlink",
+			path:       dirSymlinkPath,
+			expectLink: true,
+			expectErr:  false,
 		},
 		{
-			name:        "NonExistent",
-			path:        nonExistent,
-			expectLink:  false,
-			expectError: true,
+			name:       "NonExistent",
+			path:       nonExistent,
+			expectLink: false,
+			expectErr:  true,
 		},
 	}
 
@@ -370,8 +376,8 @@ func TestIsPathSymlink(t *testing.T) {
 			if isLink != tt.expectLink {
 				t.Errorf("Expected isLink=%v, got %v", tt.expectLink, isLink)
 			}
-			if (err != nil) != tt.expectError {
-				t.Errorf("Expected error=%v, got %v", tt.expectError, err)
+			if (err != nil) != tt.expectErr {
+				t.Errorf("Expected error=%v, got %v", tt.expectErr, err)
 			}
 		})
 	}
@@ -468,10 +474,11 @@ func TestPathExists(t *testing.T) {
 	invalidPath := string([]byte{0x00}) // causes an error on most systems
 
 	tests := []struct {
-		name        string
-		path        string
-		expectExist bool
-		expectErr   bool
+		name             string
+		path             string
+		expectExist      bool
+		expectErr        bool
+		expectErrMessage string
 	}{
 		{
 			name:        "ExistingFile",
