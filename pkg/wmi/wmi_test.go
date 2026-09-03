@@ -20,6 +20,8 @@ limitations under the License.
 package wmi
 
 import (
+	"errors"
+	"fmt"
 	"testing"
 )
 
@@ -121,6 +123,49 @@ func TestQueryBuilderBuild(t *testing.T) {
 			got := tc.builder.Build()
 			if got != tc.expected {
 				t.Errorf("Build() = %s, want %s", got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestIsDiskReadOnlyError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{
+			name:     "nil error",
+			err:      nil,
+			expected: false,
+		},
+		{
+			name:     "other error",
+			err:      errors.New("some other error"),
+			expected: false,
+		},
+		{
+			name:     "WMI error with different code",
+			err:      &WMIError{Code: 41006},
+			expected: false,
+		},
+		{
+			name:     "WMI error with read-only code",
+			err:      &WMIError{Code: ErrorCodeDiskIsReadOnly},
+			expected: true,
+		},
+		{
+			name:     "wrapped WMI error with read-only code 41002",
+			err:      fmt.Errorf("wrapped: %w", &WMIError{Code: 41002}),
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := IsDiskReadOnlyError(tc.err)
+			if got != tc.expected {
+				t.Errorf("IsDiskReadOnlyError(%v) = %v, want %v", tc.err, got, tc.expected)
 			}
 		})
 	}
